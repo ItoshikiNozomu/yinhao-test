@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import useDebounce from "../hooks/useDebounce"
 import { QueryResultData } from "./Results"
 
@@ -24,11 +24,15 @@ export type OnQueryInputChangeFn = (
 ) => void
 const LoadingSpin = () => {
   return (
-    <div className="lds-ring" data-testid="spin" style={{
-        position:'absolute',
-        right:0,
-        bottom:'3px'
-    }}>
+    <div
+      className="lds-ring"
+      data-testid="spin"
+      style={{
+        position: "absolute",
+        right: 0,
+        bottom: "3px",
+      }}
+    >
       <div></div>
       <div></div>
       <div></div>
@@ -41,26 +45,30 @@ const QueryInput = (props: { onChange: OnQueryInputChangeFn }) => {
   const [inputValue, setInputValue] = useState("")
   const [isFetching, setIsFetching] = useState(false)
   const qqReg = /^[1-9][0-9]{4,10}$/gim
+  const queryId = useRef(0)
   // const [isFetching, setIsFetching] = useState(false)
   const debouncedQuery = useDebounce(
     async (v) => {
       if (qqReg.test(v)) {
         setIsFetching(true)
         let ret
+        let _queryId = Date.now()
         try {
+          queryId.current = _queryId
           ret = await fetchWithTimeout(
             `https://api.uomg.com/api/qq.info?qq=${v}`
           ).then((r) => r.json())
         } catch (e) {
           props.onChange([], String(e))
         }
+        if (_queryId === queryId.current) {
+          setIsFetching(false)
 
-        setIsFetching(false)
-
-        if (ret.code === 1) {
-          props.onChange([ret])
-        } else {
-          props.onChange([], ret.msg)
+          if (ret.code === 1) {
+            props.onChange([ret])
+          } else {
+            props.onChange([], ret.msg)
+          }
         }
       }
     },
