@@ -73,6 +73,7 @@ input:focus{
   border-radius: 8px;
   align-items: center;
   padding: 10px;
+  background-color: #eee;
 }
 .item-img{
   width: 50px;
