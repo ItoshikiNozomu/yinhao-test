@@ -53,17 +53,21 @@ const QueryInput = (props: { onChange: OnQueryInputChangeFn }) => {
         setIsFetching(true)
         let ret
         let _queryId = Date.now()
+        queryId.current = _queryId
         try {
-          queryId.current = _queryId
           ret = await fetchWithTimeout(
             `https://api.uomg.com/api/qq.info?qq=${v}`
-          ).then((r) => r.json())
+          ).then((r) => {
+            if (!r.ok) {
+              throw new Error(r.statusText)
+            }
+            return r.json()
+          })
         } catch (e) {
           props.onChange([], String(e))
         }
+        setIsFetching(false)
         if (_queryId === queryId.current) {
-          setIsFetching(false)
-
           if (ret.code === 1) {
             props.onChange([ret])
           } else {
